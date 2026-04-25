@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeriesGraph – TRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d0d0f;
+  color: #e8e8ed;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 36px 28px;
+}
+
+.page { display: flex; gap: 40px; max-width: 980px; margin: 0 auto; align-items: flex-start; }
+
+/* ─── LEFT ─── */
+.left { width: 190px; flex-shrink: 0; }
+
+.poster-wrap {
+  position: relative; cursor: pointer;
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+  transition: transform .2s;
+}
+.poster-wrap:hover { transform: scale(1.02); }
+.poster-wrap:hover .poster-hover { opacity: 1; }
+.poster-hover {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; opacity: 0; transition: opacity .2s;
+  font-size: 11px; font-weight: 700; letter-spacing: .5px; color: #fff;
+}
+.poster-hover-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+}
+#poster-img { width: 190px; height: 285px; object-fit: cover; display: block; }
+#poster-input { display: none; }
+
+.taste-pill {
+  background: linear-gradient(135deg, #3b2270, #2a1a5e);
+  border-radius: 0 0 10px 10px;
+  text-align: center;
+  font-size: 11.5px; font-weight: 600;
+  padding: 9px 0; color: #c4a9ff;
+  letter-spacing: .3px;
+  margin-top: -2px;
+}
+
+.meta { margin-top: 20px; }
+
+.rating-row { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+.star { font-size: 18px; color: #f5c541; }
+.rating-num { font-size: 20px; font-weight: 800; color: #fff; }
+.rating-votes { font-size: 12px; color: #666; font-weight: 400; }
+
+.show-title { font-size: 20px; font-weight: 800; letter-spacing: -.3px; color: #fff; margin-bottom: 3px; line-height: 1.2; }
+.show-year { font-size: 12px; color: #555; font-weight: 500; margin-bottom: 24px; }
+
+.actions { display: flex; flex-direction: column; gap: 1px; }
+.action-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 9px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+  color: #4fb3f6; transition: background .15s, color .15s;
+  width: 100%; text-align: left;
+}
+.action-btn:hover { background: rgba(79,179,246,.08); color: #7ecbfa; }
+.action-btn svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .85; }
+
+.tip-text { margin-top: 22px; font-size: 11px; color: #3d3d44; line-height: 1.5; font-style: italic; }
+
+/* ─── RIGHT ─── */
+.right { flex: 1; min-width: 0; }
+
+.banner-section {
+  background: linear-gradient(135deg, #1a1a25 0%, #16161e 100%);
+  border: 1px solid #28283a;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+  margin-bottom: 28px;
+  padding: 50px;
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-title {
+  font-size: 72px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff4444, #ff8888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+  margin-bottom: 16px;
+  letter-spacing: 3px;
+  line-height: 1.1;
+}
+
+.banner-subtitle {
+  font-size: 20px;
+  color: #d0d0d8;
+  font-style: italic;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.banner-stats {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: rgba(255, 68, 68, 0.08);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ff8888;
+}
+
+.controls { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.ctrl-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: #1a1a20; border: 1px solid #2a2a35;
+  color: #b0b0bc; font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 500;
+  padding: 7px 13px; border-radius: 20px; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.ctrl-pill:hover { border-color: #444; color: #ddd; }
+.ctrl-pill svg { width: 13px; height: 13px; }
+.ctrl-pill .chev { width: 10px; height: 10px; opacity: .5; }
+
+.toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #555; }
+.toggle-track {
+  width: 40px; height: 22px; background: #222; border-radius: 11px;
+  cursor: pointer; position: relative; border: 1px solid #333; transition: background .2s;
+}
+.toggle-track.on { background: #2a4a2a; border-color: #3a6a3a; }
+.toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #444; transition: left .2s, background .2s;
+}
+.toggle-track.on .toggle-knob { left: 21px; background: #5db85d; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 22px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #666; font-weight: 500; }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ─── GRID ─── */
+.grid-outer { overflow-x: auto; }
+.grid-table { border-collapse: separate; border-spacing: 6px; }
+
+.col-head {
+  font-size: 12px; font-weight: 600; color: #3a3a50;
+  text-align: center; padding: 0 4px 10px; letter-spacing: .5px;
+}
+.row-head {
+  font-size: 12px; font-weight: 600; color: #2e2e3a;
+  text-align: right; padding: 0 12px 0 0;
+  white-space: nowrap; vertical-align: middle;
+  position: relative;
+}
+
+.cell {
+  width: 82px; height: 58px;
+  border-radius: 13px;
+  font-size: 19px; font-weight: 800;
+  text-align: center; line-height: 58px;
+  cursor: pointer;
+  transition: transform .15s, filter .15s;
+  position: relative;
+  letter-spacing: -.5px;
+  user-select: none;
+}
+.cell:hover { transform: scale(1.09) translateY(-2px); filter: brightness(1.14); z-index: 10; }
+.cell:active { transform: scale(.97); }
+
+.cell-empty {
+  background: #141418; border: 1.5px dashed #222230;
+  color: #282830; font-size: 22px;
+}
+
+/* Tiers */
+.c-absolute { background: #1e6fb5; color: #c8e8ff; box-shadow: 0 6px 22px rgba(30,111,181,.4); }
+.c-awesome  { background: #166336; color: #a0f0c0; box-shadow: 0 6px 22px rgba(22,99,54,.45); }
+.c-great    { background: #1e7a43; color: #b0eec8; box-shadow: 0 6px 20px rgba(30,122,67,.38); }
+.c-good     { background: #6a5a10; color: #eed870; box-shadow: 0 6px 20px rgba(106,90,16,.4); }
+.c-regular  { background: #7a3e0c; color: #f8b870; box-shadow: 0 6px 20px rgba(122,62,12,.4); }
+.c-bad      { background: #781a1a; color: #f8a0a0; box-shadow: 0 6px 20px rgba(120,26,26,.4); }
+.c-garbage  { background: #4c1e80; color: #d8b0ff; box-shadow: 0 6px 20px rgba(76,30,128,.4); }
+
+.episode-tooltip {
+  position: absolute;
+  background: #1a1a25;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #b0b0bc;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.episode-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #2a2a3a;
+}
+
+.cell-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.cell-wrapper:hover .episode-tooltip {
+  opacity: 1;
+}
+
+.avg-head {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  color: #282830; text-transform: uppercase; text-align: right;
+  padding: 16px 12px 0 0; vertical-align: top;
+}
+.avg-cell { padding: 12px 4px 0; vertical-align: top; }
+.avg-num { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.avg-bar-track { height: 4px; border-radius: 2px; background: #1a1a22; margin: 0 10px; }
+.avg-bar-fill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+
+/* ─── MODALS ─── */
+.edit-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.72); z-index: 400;
+  align-items: center; justify-content: center;
+}
+.edit-backdrop.open { display: flex; }
+.edit-popup {
+  background: #16161e; border: 1px solid #28283a;
+  border-radius: 20px; padding: 28px 32px 24px;
+  width: 270px; text-align: center;
+  box-shadow: 0 40px 100px rgba(0,0,0,.9);
+}
+.pop-ep-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  color: #38384a; text-transform: uppercase; margin-bottom: 14px;
+}
+.pop-input {
+  width: 110px; background: #0d0d12;
+  border: 2px solid #222232; border-radius: 13px;
+  color: #fff; font-family: 'Inter', sans-serif;
+  font-size: 32px; font-weight: 800; letter-spacing: -1px;
+  text-align: center; padding: 10px 8px;
+  outline: none; transition: border-color .2s;
+  display: block; margin: 0 auto 20px;
+}
+.pop-input:focus { border-color: #2a6faa; }
+
+.pop-ep-name {
+  width: 200px; background: #0d0d12;
+  border: 2px solid #222232; border-radius: 13px;
+  color: #fff; font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  text-align: center; padding: 10px 8px;
+  outline: none; transition: border-color .2s;
+  display: block; margin: 0 auto 20px;
+}
+.pop-ep-name:focus { border-color: #2a6faa; }
+
+.popup-btns { display: flex; gap: 8px; justify-content: center; }
+.pop-save {
+  background: #1e6fb5; color: #d0eaff; border: none;
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px;
+  padding: 9px 20px; border-radius: 9px; cursor: pointer; transition: opacity .15s;
+}
+.pop-save:hover { opacity: .85; }
+.pop-del {
+  background: #3a1010; color: #d07070; border: 1px solid #5a2020;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  padding: 9px 14px; border-radius: 9px; cursor: pointer; transition: background .15s;
+}
+.pop-del:hover { background: #5a1a1a; }
+.pop-cancel {
+  background: none; border: 1px solid #22223a; color: #444;
+  font-family: 'Inter', sans-serif; font-size: 12px;
+  padding: 9px 14px; border-radius: 9px; cursor: pointer; transition: border-color .15s;
+}
+.pop-cancel:hover { border-color: #444; color: #888; }
+
+.modal-back {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.82); z-index: 500;
+  align-items: center; justify-content: center;
+}
+.modal-back.open { display: flex; }
+.modal-box {
+  background: #13131a; border: 1px solid #22223a;
+  border-radius: 22px; padding: 32px 36px;
+  width: 370px; max-width: 95vw;
+  box-shadow: 0 50px 120px rgba(0,0,0,.95);
+}
+.modal-box h3 { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 24px; letter-spacing: -.3px; }
+.mfield { margin-bottom: 16px; }
+.mfield label {
+  display: block; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; color: #303045; text-transform: uppercase; margin-bottom: 7px;
+}
+.mfield input {
+  width: 100%; background: #0d0d12; border: 1.5px solid #20203a;
+  color: #e8e8f0; font-family: 'Inter', sans-serif; font-size: 14px;
+  padding: 10px 13px; border-radius: 10px; outline: none; transition: border-color .18s;
+}
+.mfield input:focus { border-color: #1e6fb5; }
+.modal-btns { display: flex; gap: 10px; margin-top: 24px; }
+.m-save {
+  background: #1e6fb5; color: #d0eaff; border: none;
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px;
+  padding: 10px 24px; border-radius: 10px; cursor: pointer;
+}
+.m-cancel {
+  background: none; border: 1px solid #22223a; color: #555;
+  font-family: 'Inter', sans-serif; font-size: 13px;
+  padding: 10px 18px; border-radius: 10px; cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="poster-wrap" onclick="document.getElementById('poster-input').click()">
+      <img id="poster-img" src="https://via.placeholder.com/190x285/1a1a1a/ff4444?text=TRM" alt="TRM">
+      <div class="poster-hover">
+        <div class="poster-hover-icon">
+          <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        Poster değiştir
+      </div>
+      <input type="file" id="poster-input" accept="image/*" onchange="changePoster(event)">
+    </div>
+    <div class="taste-pill">✦ Taste Match</div>
+    <div class="meta">
+      <div class="rating-row">
+        <span class="star">★</span>
+        <span class="rating-num" id="d-rating">8.5</span>
+        <span class="rating-votes">(<span id="d-votes">245,891</span>)</span>
+      </div>
+      <div class="show-title" id="d-title">THE BOYS: RAID MATCH</div>
+      <div class="show-year" id="d-year">2024</div>
+    </div>
+    <div class="actions">
+      <button class="action-btn" onclick="openInfoModal()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Bilgileri düzenle
+      </button>
+      <button class="action-btn" onclick="document.getElementById('poster-input').click()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Poster değiştir
+      </button>
+      <button class="action-btn" onclick="saveImg()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Görsel olarak kaydet
+      </button>
+      <button class="action-btn">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Where to watch
+      </button>
+    </div>
+    <p class="tip-text">Hücreye tıklayarak<br>puanı ve adı düzenleyebilirsin</p>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <!-- BANNER SECTION -->
+    <div class="banner-section">
+      <div class="banner-title">TRM</div>
+      <div class="banner-subtitle">Real Heroes. Real Problems.</div>
+      <div class="banner-stats">
+        <div class="stat-card">
+          <div class="stat-label">Genel Ortalama</div>
+          <div class="stat-value" id="overall-avg">8.5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">En Yüksek</div>
+          <div class="stat-value" id="max-rating">9.8</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">En Düşük</div>
+          <div class="stat-value" id="min-rating">6.7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID SECTION -->
+    <div class="controls">
+      <button class="ctrl-pill">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        Public Ratings
+        <svg class="chev" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <button class="ctrl-pill">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Grid
+        <svg class="chev" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="toggle-wrap">
+        Inverted
+        <div class="toggle-track" id="inv-toggle" onclick="this.classList.toggle('on')">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#1e6fb5"></div> Absolute Cinema</div>
+      <div class="leg"><div class="leg-dot" style="background:#166336"></div> Awesome</div>
+      <div class="leg"><div class="leg-dot" style="background:#1e7a43"></div> Great</div>
+      <div class="leg"><div class="leg-dot" style="background:#9a8018"></div> Good</div>
+      <div class="leg"><div class="leg-dot" style="background:#a05018"></div> Regular</div>
+      <div class="leg"><div class="leg-dot" style="background:#942020"></div> Bad</div>
+      <div class="leg"><div class="leg-dot" style="background:#6228a0"></div> Garbage</div>
+    </div>
+
+    <div class="grid-outer">
+      <table class="grid-table" id="the-grid">
+        <thead id="g-head"></thead>
+        <tbody id="g-body"></tbody>
+        <tfoot id="g-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Cell edit -->
+<div class="edit-backdrop" id="edit-back" onclick="handleBd(event)">
+  <div class="edit-popup">
+    <div class="pop-ep-label" id="pop-label">S1 · E1</div>
+    <input class="pop-ep-name" type="text" id="pop-ep-name" placeholder="Bölüm adı">
+    <input class="pop-input" type="number" id="pop-input" min="0" max="10" step="0.1" placeholder="Puan">
+    <div class="popup-btns">
+      <button class="pop-save" onclick="saveCellEdit()">Kaydet</button>
+      <button class="pop-del" onclick="deleteCellEdit()">Sil</button>
+      <button class="pop-cancel" onclick="closeEdit()">İptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal -->
+<div class="modal-back" id="info-back" onclick="handleInfoBd(event)">
+  <div class="modal-box">
+    <h3>Dizi Bilgileri</h3>
+    <div class="mfield"><label>Dizi Adı</label><input id="m-title" value="THE BOYS: RAID MATCH"></div>
+    <div class="mfield"><label>Puan</label><input id="m-rating" type="number" step="0.1" min="0" max="10" value="8.5"></div>
+    <div class="mfield"><label>Oy Sayısı</label><input id="m-votes" value="245,891"></div>
+    <div class="mfield"><label>Yıllar</label><input id="m-years" value="2024"></div>
+    <div class="modal-btns">
+      <button class="m-save" onclick="saveInfo()">Kaydet</button>
+      <button class="m-cancel" onclick="closeInfoModal()">İptal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const scores = [
+  [8.7, 8.4, 8.1, 8.5, null],
+  [8.9, 7.8, 9.2, 9.0, null],
+  [8.2, 8.6, 8.4, 8.3, null],
+  [7.9, 9.1, 9.3, 6.7, null],
+  [9.0, 8.6, 7.5, 9.7, null],
+  [7.7, 7.9, 8.8, 9.1, null],
+  [9.5, 8.8, 9.6, 9.8, null],
+  [9.6, 9.2, 9.8, 8.8, null],
+];
+
+const episodeNames = {
+  "0_0": "The Setup",
+  "0_1": "First Contact",
+  "1_0": "Going Deeper",
+  "1_1": "Critical Hit",
+  "2_0": "High Stakes",
+  "2_1": "Convergence",
+};
+
+const SEASONS = 5, EPISODES = 8;
+let editing = null;
+
+function cellClass(v) {
+  if (v === null) return 'cell-empty';
+  if (v >= 9.5) return 'c-absolute';
+  if (v >= 9.0) return 'c-awesome';
+  if (v >= 8.0) return 'c-great';
+  if (v >= 7.5) return 'c-good';
+  if (v >= 6.5) return 'c-regular';
+  if (v >= 5.0) return 'c-bad';
+  return 'c-garbage';
+}
+
+function avgCol(a) {
+  if (a >= 9.0) return '#1e6fb5';
+  if (a >= 8.5) return '#166336';
+  if (a >= 8.0) return '#2a8a50';
+  if (a >= 7.5) return '#9a8018';
+  return '#a05018';
+}
+
+function getEpisodeName(e, s) {
+  return episodeNames[`${e}_${s}`] || '';
+}
+
+function setEpisodeName(e, s, name) {
+  if (name.trim() === '') {
+    delete episodeNames[`${e}_${s}`];
+  } else {
+    episodeNames[`${e}_${s}`] = name;
+  }
+}
+
+function calculateStats() {
+  const allScores = scores.flat().filter(v => v !== null);
+  
+  if (allScores.length === 0) {
+    document.getElementById('overall-avg').textContent = '—';
+    document.getElementById('max-rating').textContent = '—';
+    document.getElementById('min-rating').textContent = '—';
+    return;
+  }
+
+  const avg = (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1);
+  const max = Math.max(...allScores).toFixed(1);
+  const min = Math.min(...allScores).toFixed(1);
+
+  document.getElementById('overall-avg').textContent = avg;
+  document.getElementById('max-rating').textContent = max;
+  document.getElementById('min-rating').textContent = min;
+}
+
+function buildGrid() {
+  let h = '<tr><th></th>';
+  for (let s = 0; s < SEASONS; s++) h += `<th class="col-head">S${s+1}</th>`;
+  document.getElementById('g-head').innerHTML = h + '</tr>';
+
+  let b = '';
+  for (let e = 0; e < EPISODES; e++) {
+    b += `<tr><td class="row-head">E${e+1}</td>`;
+    for (let s = 0; s < SEASONS; s++) {
+      const v = scores[e][s];
+      const cls = cellClass(v);
+      const txt = v !== null ? v.toFixed(1) : '?';
+      const epName = getEpisodeName(e, s);
+      const tooltip = epName ? `<div class="episode-tooltip">${epName}</div>` : '';
+      b += `<td><div class="cell-wrapper">${tooltip}<div class="cell ${cls}" onclick="openEdit(${e},${s})">${txt}</div></div></td>`;
+    }
+    b += '</tr>';
+  }
+  document.getElementById('g-body').innerHTML = b;
+
+  let f = '<tr><td class="avg-head">AVG.</td>';
+  for (let s = 0; s < SEASONS; s++) {
+    const vals = scores.map(r => r[s]).filter(v => v !== null);
+    if (!vals.length) { f += '<td class="avg-cell"><div class="avg-num" style="color:#22223a">—</div></td>'; continue; }
+    const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const pct = Math.max(0, Math.min(100, ((avg-6)/4*100))).toFixed(1);
+    const col = avgCol(avg);
+    f += `<td class="avg-cell">
+      <div class="avg-num" style="color:${col}">${avg.toFixed(1)}</div>
+      <div class="avg-bar-track"><div class="avg-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+    </td>`;
+  }
+  document.getElementById('g-foot').innerHTML = f + '</tr>';
+
+  // İstatistikleri güncelle
+  calculateStats();
+}
+
+function openEdit(e, s) {
+  editing = {e, s};
+  const v = scores[e][s];
+  const epName = getEpisodeName(e, s);
+  document.getElementById('pop-label').textContent = `S${s+1}  ·  E${e+1}`;
+  const inp = document.getElementById('pop-input');
+  const nameInp = document.getElementById('pop-ep-name');
+  inp.value = v !== null ? v : '';
+  nameInp.value = epName;
+  document.getElementById('edit-back').classList.add('open');
+  setTimeout(() => nameInp.focus(), 60);
+}
+
+function closeEdit() { 
+  document.getElementById('edit-back').classList.remove('open'); 
+  editing = null; 
+}
+
+function handleBd(e) { 
+  if (e.target === e.currentTarget) closeEdit(); 
+}
+
+function saveCellEdit() {
+  if (!editing) return;
+  const v = parseFloat(document.getElementById('pop-input').value);
+  const epName = document.getElementById('pop-ep-name').value.trim();
+  
+  if (!isNaN(v) && v >= 0 && v <= 10) {
+    scores[editing.e][editing.s] = Math.round(v*10)/10;
+  }
+  
+  setEpisodeName(editing.e, editing.s, epName);
+  
+  closeEdit(); 
+  buildGrid();
+}
+
+function deleteCellEdit() {
+  if (!editing) return;
+  scores[editing.e][editing.s] = null;
+  setEpisodeName(editing.e, editing.s, '');
+  closeEdit(); 
+  buildGrid();
+}
+
+document.getElementById('pop-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveCellEdit();
+  if (e.key === 'Escape') closeEdit();
+});
+
+document.getElementById('pop-ep-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveCellEdit();
+  if (e.key === 'Escape') closeEdit();
+});
+
+function openInfoModal() { document.getElementById('info-back').classList.add('open'); }
+function closeInfoModal() { document.getElementById('info-back').classList.remove('open'); }
+function handleInfoBd(e) { if (e.target === e.currentTarget) closeInfoModal(); }
+function saveInfo() {
+  document.getElementById('d-title').textContent = document.getElementById('m-title').value;
+  document.getElementById('d-rating').textContent = parseFloat(document.getElementById('m-rating').value).toFixed(1);
+  document.getElementById('d-votes').textContent = document.getElementById('m-votes').value;
+  document.getElementById('d-year').textContent = document.getElementById('m-years').value;
+  closeInfoModal();
+}
+
+function changePoster(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => document.getElementById('poster-img').src = ev.target.result;
+  r.readAsDataURL(f);
+}
+
+function saveImg() {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload = () => {
+    html2canvas(document.querySelector('.page'), { backgroundColor: '#0d0d0f', scale: 2, useCORS: true }).then(c => {
+      const a = document.createElement('a'); a.download = 'trm-ratings.png';
+      a.href = c.toDataURL('image/png'); a.click();
+    });
+  };
+  document.head.appendChild(s);
+}
+
+buildGrid();
+</script>
+</body>
+</html>
