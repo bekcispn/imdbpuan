@@ -130,32 +130,47 @@ body {
 .cell {
   width: 82px; height: 58px;
   border-radius: 13px;
-  font-size: 19px; font-weight: 800;
-  text-align: center; line-height: 58px;
   cursor: pointer;
   transition: transform .15s, filter .15s;
   position: relative;
-  letter-spacing: -.5px;
   user-select: none;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4px; overflow: hidden;
 }
 .cell:hover { transform: scale(1.09) translateY(-2px); filter: brightness(1.14); z-index: 10; }
 .cell:active { transform: scale(.97); }
 
-.cell-empty {
-  background: #141418; border: 1.5px dashed #222230;
-  color: #282830; font-size: 22px;
+.cell-score {
+  font-size: 19px; font-weight: 800;
+  transition: transform .2s ease, font-size .2s ease;
+  line-height: 1;
+}
+.cell-title {
+  font-size: 9px; font-weight: 600;
+  position: absolute; bottom: 7px;
+  width: 100%; padding: 0 6px;
+  opacity: 0; transition: opacity .2s, transform .2s;
+  text-align: center; max-width: 100%;
+  overflow: hidden; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  line-height: 1.1; pointer-events: none;
+  transform: translateY(4px);
 }
 
-/* Tiers — richer, saturated */
-.c-absolute { background: #1e6fb5; color: #c8e8ff; box-shadow: 0 6px 22px rgba(30,111,181,.4); }
-.c-awesome  { background: #166336; color: #a0f0c0; box-shadow: 0 6px 22px rgba(22,99,54,.45); }
-.c-great    { background: #1e7a43; color: #b0eec8; box-shadow: 0 6px 20px rgba(30,122,67,.38); }
-.c-good     { background: #6a5a10; color: #eed870; box-shadow: 0 6px 20px rgba(106,90,16,.4); }
-.c-regular  { background: #7a3e0c; color: #f8b870; box-shadow: 0 6px 20px rgba(122,62,12,.4); }
-.c-bad      { background: #781a1a; color: #f8a0a0; box-shadow: 0 6px 20px rgba(120,26,26,.4); }
-.c-garbage  { background: #4c1e80; color: #d8b0ff; box-shadow: 0 6px 20px rgba(76,30,128,.4); }
+/* Internal title and score shift - ONLY in Always ON mode */
+body.show-titles-always .cell.has-title .cell-score { transform: translateY(-8px) scale(1.15); }
+body.show-titles-always .cell.has-title .cell-title { opacity: 0.9; transform: translateY(0); display: -webkit-box; }
 
-/* Episode name tooltip */
+/* In Hover mode (default), ensure internal title is hidden and score is centered */
+body:not(.show-titles-always) .cell-title { display: none; }
+body:not(.show-titles-always) .cell-score { transform: none !important; }
+
+/* In Always ON mode, hide the bubble */
+body.show-titles-always .episode-tooltip { display: none !important; }
+
+
+/* Tooltip Bubble (Hover mode) - only for those with titles */
 .episode-tooltip {
   position: absolute;
   background: #1a1a25;
@@ -173,8 +188,8 @@ body {
   margin-bottom: 8px;
   opacity: 0;
   transition: opacity 0.2s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
-
 .episode-tooltip::after {
   content: '';
   position: absolute;
@@ -184,15 +199,38 @@ body {
   border: 5px solid transparent;
   border-top-color: #2a2a3a;
 }
+.cell-wrapper:hover .episode-tooltip {
+  opacity: 1;
+}
+
+/* Hide internal title in hover mode or if no title exists */
+body:not(.show-titles-always) .cell-title { display: none; }
+.cell:not(.has-title) .cell-title { display: none; }
+
 
 .cell-wrapper {
   position: relative;
   display: inline-block;
 }
 
-.cell-wrapper:hover .episode-tooltip {
-  opacity: 1;
+
+
+
+.cell-empty {
+  background: #141418; border: 1.5px dashed #222230;
+  color: #282830; font-size: 22px;
 }
+
+/* Tiers — richer, saturated */
+.c-absolute { background: #1e6fb5; color: #c8e8ff; box-shadow: 0 6px 22px rgba(30,111,181,.4); }
+.c-awesome  { background: #166336; color: #a0f0c0; box-shadow: 0 6px 22px rgba(22,99,54,.45); }
+.c-great    { background: #1e7a43; color: #b0eec8; box-shadow: 0 6px 20px rgba(30,122,67,.38); }
+.c-good     { background: #6a5a10; color: #eed870; box-shadow: 0 6px 20px rgba(106,90,16,.4); }
+.c-regular  { background: #7a3e0c; color: #f8b870; box-shadow: 0 6px 20px rgba(122,62,12,.4); }
+.c-bad      { background: #781a1a; color: #f8a0a0; box-shadow: 0 6px 20px rgba(120,26,26,.4); }
+.c-garbage  { background: #4c1e80; color: #d8b0ff; box-shadow: 0 6px 20px rgba(76,30,128,.4); }
+
+
 
 /* AVG footer */
 .avg-head {
@@ -362,11 +400,19 @@ body {
         <svg class="chev" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="toggle-wrap">
+        Bölüm Adı:
+        <div class="toggle-track" id="title-toggle" onclick="toggleTitleMode()">
+          <div class="toggle-knob"></div>
+        </div>
+        <span id="title-mode-label" style="min-width: 60px;">Hover</span>
+      </div>
+      <div class="toggle-wrap">
         Inverted
         <div class="toggle-track" id="inv-toggle" onclick="this.classList.toggle('on')">
           <div class="toggle-knob"></div>
         </div>
       </div>
+
     </div>
 
     <div class="legend">
@@ -408,9 +454,13 @@ body {
   <div class="modal-box">
     <h3>Dizi Bilgileri</h3>
     <div class="mfield"><label>Dizi Adı</label><input id="m-title" value="INVINCIBLE"></div>
-    <div class="mfield"><label>Puan</label><input id="m-rating" type="number" step="0.1" min="0" max="10" value="8.7"></div>
     <div class="mfield"><label>Oy Sayısı</label><input id="m-votes" value="329,342"></div>
     <div class="mfield"><label>Yıllar</label><input id="m-years" value="2021 - now"></div>
+    <div class="mrow" style="display:flex; gap:10px;">
+      <div class="mfield" style="flex:1;"><label>Sezon Sayısı</label><input id="m-seasons" type="number" value="5"></div>
+      <div class="mfield" style="flex:1;"><label>Bölüm Sayısı</label><input id="m-episodes" type="number" value="8"></div>
+    </div>
+
     <div class="modal-btns">
       <button class="m-save" onclick="saveInfo()">Kaydet</button>
       <button class="m-cancel" onclick="closeInfoModal()">İptal</button>
@@ -440,12 +490,53 @@ const episodeNames = {
   "2_1": "You Look Tired",
 };
 
-const SEASONS = 5, EPISODES = 8;
+let SEASONS = 5, EPISODES = 8;
 let editing = null;
+let titleAlwaysOn = false;
+
+function ensureScores() {
+  while (scores.length < EPISODES) scores.push(new Array(SEASONS).fill(null));
+  for (let e = 0; e < EPISODES; e++) {
+    while (scores[e].length < SEASONS) scores[e].push(null);
+  }
+}
+
+function calcOverallAvg() {
+  const vals = [];
+  for (let e = 0; e < EPISODES; e++) {
+    for (let s = 0; s < SEASONS; s++) {
+      const v = scores[e][s];
+      if (v !== null && v !== undefined) vals.push(v);
+    }
+  }
+  if (!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+function updateAvgDisplay() {
+  const avg = calcOverallAvg();
+  const el = document.getElementById('d-rating');
+  if (avg !== null) el.textContent = avg.toFixed(1);
+}
+
+function toggleTitleMode() {
+  const t = document.getElementById('title-toggle');
+  const l = document.getElementById('title-mode-label');
+  t.classList.toggle('on');
+  titleAlwaysOn = t.classList.contains('on');
+  if (titleAlwaysOn) {
+    document.body.classList.add('show-titles-always');
+    l.textContent = 'Her zaman';
+  } else {
+    document.body.classList.remove('show-titles-always');
+    l.textContent = 'Hover';
+  }
+}
+
 
 function cellClass(v) {
   if (v === null) return 'cell-empty';
-  if (v >= 9.5) return 'c-absolute';
+  if (v >= 9.6) return 'c-absolute';
   if (v >= 9.0) return 'c-awesome';
   if (v >= 8.0) return 'c-great';
   if (v >= 7.5) return 'c-good';
@@ -454,13 +545,15 @@ function cellClass(v) {
   return 'c-garbage';
 }
 
+
 function avgCol(a) {
-  if (a >= 9.0) return '#1e6fb5';
-  if (a >= 8.5) return '#166336';
+  if (a >= 9.6) return '#1e6fb5';
+  if (a >= 9.0) return '#166336';
   if (a >= 8.0) return '#2a8a50';
   if (a >= 7.5) return '#9a8018';
   return '#a05018';
 }
+
 
 function getEpisodeName(e, s) {
   return episodeNames[`${e}_${s}`] || '';
@@ -487,12 +580,25 @@ function buildGrid() {
       const cls = cellClass(v);
       const txt = v !== null ? v.toFixed(1) : '?';
       const epName = getEpisodeName(e, s);
+      const hasTitleCls = epName ? 'has-title' : '';
       const tooltip = epName ? `<div class="episode-tooltip">${epName}</div>` : '';
-      b += `<td><div class="cell-wrapper">${tooltip}<div class="cell ${cls}" onclick="openEdit(${e},${s})">${txt}</div></div></td>`;
+      b += `<td>
+        <div class="cell-wrapper">
+          ${tooltip}
+          <div class="cell ${cls} ${hasTitleCls}" onclick="openEdit(${e},${s})">
+            <span class="cell-score">${txt}</span>
+            <span class="cell-title">${epName}</span>
+          </div>
+        </div>
+      </td>`;
+
     }
     b += '</tr>';
   }
   document.getElementById('g-body').innerHTML = b;
+  updateAvgDisplay();
+
+
 
   let f = '<tr><td class="avg-head">AVG.</td>';
   for (let s = 0; s < SEASONS; s++) {
@@ -564,16 +670,27 @@ document.getElementById('pop-ep-name').addEventListener('keydown', e => {
   if (e.key === 'Escape') closeEdit();
 });
 
-function openInfoModal() { document.getElementById('info-back').classList.add('open'); }
+function openInfoModal() {
+  document.getElementById('m-seasons').value = SEASONS;
+  document.getElementById('m-episodes').value = EPISODES;
+  document.getElementById('info-back').classList.add('open');
+}
+
 function closeInfoModal() { document.getElementById('info-back').classList.remove('open'); }
 function handleInfoBd(e) { if (e.target === e.currentTarget) closeInfoModal(); }
 function saveInfo() {
   document.getElementById('d-title').textContent = document.getElementById('m-title').value;
-  document.getElementById('d-rating').textContent = parseFloat(document.getElementById('m-rating').value).toFixed(1);
   document.getElementById('d-votes').textContent = document.getElementById('m-votes').value;
   document.getElementById('d-year').textContent = document.getElementById('m-years').value;
+  SEASONS = parseInt(document.getElementById('m-seasons').value) || SEASONS;
+  EPISODES = parseInt(document.getElementById('m-episodes').value) || EPISODES;
+  ensureScores();
+  buildGrid();
+  updateAvgDisplay();
   closeInfoModal();
 }
+
+
 
 function changePoster(e) {
   const f = e.target.files[0]; if (!f) return;
